@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小學科學科：電路與燈泡亮度（串聯與並聯）</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(23, 32, 54, 0.85);
+            --accent-yellow: #f59e0b;
+            --accent-blue: #3b82f6;
+            --text-light: #f3f4f6;
+            --wire-off: #4b5563;
+            --wire-on: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #fbbf24;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        /* 模式切換頁籤 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 20px;
+            background: transparent;
+            color: #9ca3af;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        /* 主主體區域 */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Canvas 畫布外框 */
+        .canvas-container {
+            position: relative;
+            background: var(--panel-bg);
+            border-radius: 20px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            background: radial-gradient(circle at center, #111827 0%, #0b0f19 100%);
+        }
+
+        /* 控制面板 */
+        .controls {
+            width: 100%;
+            background: var(--panel-bg);
+            border-radius: 16px;
+            padding: 15px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .control-label {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: #e5e7eb;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-switch {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-switch.on {
+            background: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-bulb {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* 底部解說卡片 */
+        .info-card {
+            width: 100%;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 16px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .info-text h3 {
+            font-size: 1.05rem;
+            color: #fbbf24;
+            margin-bottom: 4px;
+        }
+
+        .info-text p {
+            font-size: 0.95rem;
+            color: #d1d5db;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ 電路與燈泡亮度實驗室</h1>
+        <div class="subtitle">香港小學五年級科學科（常識科）互動教具</div>
+    </header>
+
+    <!-- 模式選擇 -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="setMode('series')">🔗 串聯電路 (Series)</button>
+        <button class="tab-btn" onclick="setMode('parallel')">🔀 並聯電路 (Parallel)</button>
+    </div>
+
+    <div class="container">
+        <!-- 電路 Canvas -->
+        <div class="canvas-container">
+            <canvas id="circuitCanvas" width="700" height="380"></canvas>
+        </div>
+
+        <!-- 操作控制面板 -->
+        <div class="controls">
+            <!-- 總電源開關 -->
+            <div class="control-group">
+                <span class="control-label">總開關：</span>
+                <button id="mainSwitchBtn" class="btn btn-switch" onclick="toggleMainSwitch()">
+                    🔴 斷開 (OFF)
+                </button>
+            </div>
+
+            <!-- 燈泡數量調整 -->
+            <div class="control-group">
+                <span class="control-label">燈泡數量：</span>
+                <button class="btn btn-bulb" onclick="changeBulbCount(-1)">- 減少</button>
+                <span id="bulbCountCount" style="font-size: 1.2rem; font-weight: bold; color: #fbbf24; min-width: 20px; text-align: center;">2</span>
+                <button class="btn btn-bulb" onclick="changeBulbCount(1)">+ 增加</button>
+            </div>
+        </div>
+
+        <!-- 底部科學知識解說卡 -->
+        <div class="info-card">
+            <div class="info-icon">💡</div>
+            <div class="info-text">
+                <h3 id="infoTitle">科學小知識：串聯電路</h3>
+                <p id="infoDesc">加載中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('circuitCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 系統狀態
+        let mode = 'series'; // 'series' 或 'parallel'
+        let mainSwitch = false; // 總開關
+        let bulbCount = 2; // 燈泡數量 (1-3)
+        let branchSwitches = [true, true, true]; // 並聯獨立支路開關
+
+        // 電子流動畫粒子
+        let particles = [];
+        const particleCount = 24;
+
+        // 初始化粒子位置
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({ progress: i / particleCount });
+        }
+
+        function setMode(newMode) {
+            mode = newMode;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateInfo();
+        }
+
+        function toggleMainSwitch() {
+            mainSwitch = !mainSwitch;
+            const btn = document.getElementById('mainSwitchBtn');
+            if (mainSwitch) {
+                btn.classList.add('on');
+                btn.innerHTML = '🟢 通電 (ON)';
+            } else {
+                btn.classList.remove('on');
+                btn.innerHTML = '🔴 斷開 (OFF)';
+            }
+        }
+
+        function changeBulbCount(delta) {
+            bulbCount = Math.max(1, Math.min(3, bulbCount + delta));
+            document.getElementById('bulbCountCount').innerText = bulbCount;
+            updateInfo();
+        }
+
+        function toggleBranchSwitch(index) {
+            branchSwitches[index] = !branchSwitches[index];
+        }
+
+        // 更新解說卡內容
+        function updateInfo() {
+            const title = document.getElementById('infoTitle');
+            const desc = document.getElementById('infoDesc');
+
+            if (mode === 'series') {
+                title.innerText = "科學小知識：串聯電路 (Series Circuit)";
+                desc.innerHTML = "在串聯電路中，所有燈泡連在同一條迴路上。當<b>增加燈泡數量</b>時，總電阻變大，電池的電壓被多個燈泡平分，因此<b>電流變慢，每個燈泡都會變暗</b>！如果其中一個地方斷開，全電路都會熄滅。";
+            } else {
+                title.innerText = "科學小知識：並聯電路 (Parallel Circuit)";
+                desc.innerHTML = "在並聯電路中，每個燈泡都有獨立的電流迴路。每個燈泡都能獨享電池的 full 電壓（1.5V），因此<b>不論增加多少個燈泡，每個燈泡都能保持最高亮度</b>！關掉其中一個支路，其他燈泡依然會亮。";
+            }
+        }
+
+        // 監聽 Canvas 點擊（用於點擊並聯獨立開關）
+        canvas.addEventListener('click', (e) => {
+            if (mode !== 'parallel') return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // 檢查是否點擊了支路開關
+            const startY = 100;
+            const gapY = 90;
+            for (let i = 0; i < bulbCount; i++) {
+                const swX = 220;
+                const swY = startY + i * gapY;
+                if (Math.hypot(x - swX, y - swY) < 20) {
+                    toggleBranchSwitch(i);
+                    break;
+                }
+            }
+        });
+
+        // --- 繪圖邏輯 ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (mode === 'series') {
+                drawSeriesCircuit();
+            } else {
+                drawParallelCircuit();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // 1. 繪製串聯電路
+        function drawSeriesCircuit() {
+            const left = 100, right = 600, top = 80, bottom = 300;
+            const isClosed = mainSwitch;
+            const speed = isClosed ? 0.008 / bulbCount : 0; // 串聯燈泡越多，電流越慢
+
+            // 繪製導線底色
+            ctx.strokeStyle = isClosed ? '#fbbf24' : '#4b5563';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.rect(left, top, right - left, bottom - top);
+            ctx.stroke();
+
+            // 繪製電池 (左側)
+            drawBattery((left + right) / 2, bottom, 1.5);
+
+            // 繪製燈泡 (頂部線路上均勻分佈)
+            const bulbY = top;
+            const brightness = isClosed ? 1 / bulbCount : 0; // 串聯亮度隨數量遞減
+
+            for (let i = 0; i < bulbCount; i++) {
+                const bulbX = left + ((right - left) / (bulbCount + 1)) * (i + 1);
+                drawBulb(bulbX, bulbY, brightness);
+            }
+
+            // 繪製電流粒子動畫
+            if (isClosed) {
+                drawParticlesOnPath([
+                    { x: left, y: bottom },
+                    { x: left, y: top },
+                    { x: right, y: top },
+                    { x: right, y: bottom },
+                    { x: left, y: bottom }
+                ], speed);
+            }
+        }
+
+        // 2. 繪製並聯電路
+        function drawParallelCircuit() {
+            const mainLeft = 80, mainRight = 620, top = 70;
+            const startY = 100, gapY = 80;
+            const isMainClosed = mainSwitch;
+
+            // 繪製幹路導線
+            ctx.strokeStyle = isMainClosed ? '#fbbf24' : '#4b5563';
+            ctx.lineWidth = 4;
+
+            const bottomY = startY + (bulbCount - 1) * gapY + 60;
+
+            // 幹路外框
+            ctx.beginPath();
+            ctx.moveTo(mainLeft, startY);
+            ctx.lineTo(mainLeft, bottomY);
+            ctx.lineTo(mainRight, bottomY);
+            ctx.lineTo(mainRight, startY);
+            ctx.stroke();
+
+            // 繪製電池 (底部幹路)
+            drawBattery((mainLeft + mainRight) / 2, bottomY, 1.5);
+
+            // 繪製各個獨立支路
+            for (let i = 0; i < bulbCount; i++) {
+                const branchY = startY + i * gapY;
+                const isBranchOn = isMainClosed && branchSwitches[i];
+
+                ctx.strokeStyle = isBranchOn ? '#fbbf24' : '#4b5563';
+                ctx.beginPath();
+                ctx.moveTo(mainLeft, branchY);
+                ctx.lineTo(mainRight, branchY);
+                ctx.stroke();
+
+                // 支路開關 (左側)
+                drawSwitch(220, branchY, branchSwitches[i]);
+
+                // 支路燈泡 (右側) - 並聯亮度恆定為最高 (1.0)
+                drawBulb(480, branchY, isBranchOn ? 1.0 : 0);
+
+                // 支路電流粒子
+                if (isBranchOn) {
+                    drawParticlesOnPath([
+                        { x: mainLeft, y: bottomY },
+                        { x: mainLeft, y: branchY },
+                        { x: mainRight, y: branchY },
+                        { x: mainRight, y: bottomY },
+                        { x: mainLeft, y: bottomY }
+                    ], 0.012, i);
+                }
+            }
+        }
+
+        // 繪製電池元件
+        function drawBattery(x, y, voltage) {
+            ctx.save();
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.fillRect(x - 30, y - 15, 60, 30);
+            ctx.strokeRect(x - 30, y - 15, 60, 30);
+
+            // 正極凸起
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(x + 30, y - 6, 6, 12);
+
+            // 文字標示
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`電池 ${voltage}V`, x, y + 4);
+            ctx.restore();
+        }
+
+        // 繪製燈泡元件（帶黃色暈影 Glow Effect）
+        function drawBulb(x, y, brightness) {
+            ctx.save();
+
+            // 燈泡發光暈影
+            if (brightness > 0) {
+                const glowRadius = 20 + brightness * 35;
+                const gradient = ctx.createRadialGradient(x, y, 5, x, y, glowRadius);
+                gradient.addColorStop(0, `rgba(254, 240, 138, ${brightness})`);
+                gradient.addColorStop(0.5, `rgba(251, 191, 36, ${brightness * 0.6})`);
+                gradient.addColorStop(1, 'rgba(251, 191, 36, 0)');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 燈泡玻璃罩
+            ctx.beginPath();
+            ctx.arc(x, y, 16, 0, Math.PI * 2);
+            ctx.fillStyle = brightness > 0 ? '#fef08a' : '#374151';
+            ctx.fill();
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 燈絲
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y + 8);
+            ctx.lineTo(x, y - 4);
+            ctx.lineTo(x + 6, y + 8);
+            ctx.strokeStyle = brightness > 0 ? '#d97706' : '#6b7280';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 繪製開關元件
+        function drawSwitch(x, y, isOpen) {
+            ctx.save();
+            ctx.fillStyle = '#64748b';
+
+            // 端點
+            ctx.beginPath();
+            ctx.arc(x - 15, y, 4, 0, Math.PI * 2);
+            ctx.arc(x + 15, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 閘刀
+            ctx.beginPath();
+            ctx.moveTo(x - 15, y);
+            if (isOpen) {
+                ctx.lineTo(x + 15, y); // 閉合
+            } else {
+                ctx.lineTo(x + 10, y - 18); // 斷開
+            }
+            ctx.strokeStyle = isOpen ? '#10b981' : '#ef4444';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 沿着多邊形路徑繪製動態電流光點
+        function drawParticlesOnPath(points, speed, offsetSeed = 0) {
+            if (speed === 0) return;
+
+            // 計算總路徑長度
+            let totalLen = 0;
+            let lengths = [];
+            for (let i = 0; i < points.length - 1; i++) {
+                let len = Math.hypot(points[i+1].x - points[i].x, points[i+1].y - points[i].y);
+                lengths.push(len);
+                totalLen += len;
+            }
+
+            ctx.save();
+            ctx.fillStyle = '#fef08a';
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 8;
+
+            particles.forEach((p, idx) => {
+                p.progress = (p.progress + speed) % 1;
+                let currentDist = ((p.progress + offsetSeed * 0.2) % 1) * totalLen;
+
+                // 尋找當前粒子位置
+                let accumulated = 0;
+                for (let i = 0; i < lengths.length; i++) {
+                    if (accumulated + lengths[i] >= currentDist) {
+                        let segDist = currentDist - accumulated;
+                        let ratio = segDist / lengths[i];
+                        let px = points[i].x + (points[i+1].x - points[i].x) * ratio;
+                        let py = points[i].y + (points[i+1].y - points[i].y) * ratio;
+
+                        ctx.beginPath();
+                        ctx.arc(px, py, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    }
+                    accumulated += lengths[i];
+                }
+            });
+
+            ctx.restore();
+        }
+
+        // 初始化
+        updateInfo();
+        draw();
+    </script>
+</body>
+</html>
