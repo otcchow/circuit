@@ -3,566 +3,998 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小學科學科：電路與燈泡亮度（串聯與並聯）</title>
+    <title>JC GoAI 系統提示詞產生器</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                        fun: ['Fredoka', 'Noto Sans TC', 'sans-serif'],
+                    },
+                    colors: {
+                        promptRed: '#FEF2F2',
+                        promptOrange: '#FFEDD5',
+                        promptYellow: '#FEF9C3',
+                        promptGreen: '#DCFCE7',
+                        promptBlue: '#DBEAFE',
+                        promptPurple: '#F3E8FF',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-color: #0b0f19;
-            --panel-bg: rgba(23, 32, 54, 0.85);
-            --accent-yellow: #f59e0b;
-            --accent-blue: #3b82f6;
-            --text-light: #f3f4f6;
-            --wire-off: #4b5563;
-            --wire-on: #fbbf24;
-        }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-light);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 15px;
-            overflow-x: hidden;
+            background-color: #F8FAF9;
+            font-family: 'Noto Sans TC', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        header {
-            text-align: center;
-            margin-bottom: 12px;
+        .step-card {
+            transition: all 0.25s ease;
         }
-
-        h1 {
-            font-size: 1.6rem;
-            color: #fbbf24;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
-        }
-
-        .subtitle {
-            font-size: 0.9rem;
-            color: #9ca3af;
-        }
-
-        /* 模式切換頁籤 */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .tab-btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 20px;
-            background: transparent;
-            color: #9ca3af;
-            font-size: 1rem;
-            font-weight: bold;
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            transition: all 0.3s ease;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
         }
-
-        .tab-btn.active {
-            background: var(--accent-blue);
-            color: white;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        .option-card:hover {
+            transform: translateY(-2px);
         }
-
-        /* 主主體區域 */
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-            max-width: 800px;
+        .option-card.selected {
+            box-shadow: 0 0 0 3.5px currentColor;
+            transform: translateY(-2px);
         }
-
-        /* Canvas 畫布外框 */
-        .canvas-container {
-            position: relative;
-            background: var(--panel-bg);
-            border-radius: 20px;
-            border: 2px solid rgba(59, 130, 246, 0.3);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        canvas {
-            display: block;
-            background: radial-gradient(circle at center, #111827 0%, #0b0f19 100%);
-        }
-
-        /* 控制面板 */
-        .controls {
-            width: 100%;
-            background: var(--panel-bg);
-            border-radius: 16px;
-            padding: 15px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .control-label {
-            font-size: 1.05rem;
-            font-weight: bold;
-            color: #e5e7eb;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s, box-shadow 0.2s;
+        .badge-step {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 9999px;
+            font-weight: 900;
         }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-switch {
-            background: #ef4444;
-            color: white;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-switch.on {
-            background: #10b981;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-bulb {
-            background: #3b82f6;
-            color: white;
-        }
-
-        /* 底部解說卡片 */
-        .info-card {
-            width: 100%;
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            border-radius: 16px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .info-icon {
-            font-size: 1.5rem;
-            line-height: 1;
-        }
-
-        .info-text h3 {
-            font-size: 1.05rem;
-            color: #fbbf24;
-            margin-bottom: 4px;
-        }
-
-        .info-text p {
-            font-size: 0.95rem;
-            color: #d1d5db;
-            line-height: 1.4;
+        button, a, input, textarea {
+            touch-action: manipulation;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen pb-16 text-gray-800">
 
-    <header>
-        <h1>⚡ 電路與燈泡亮度實驗室</h1>
-        <div class="subtitle">香港小學五年級科學科（常識科）互動教具</div>
+    <!-- Header Section (Orange to Blue Gradient) -->
+    <header class="bg-gradient-to-r from-orange-500 via-amber-500 to-sky-600 text-white shadow-lg py-5 px-4 mb-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black font-fun tracking-wide">JC GoAI 系統提示詞產生器</h1>
+                </div>
+            </div>
+            <a href="https://playground.raise.mit.edu/goai/?project=https://www.dropbox.com/scl/fi/a8dtserk9u882d2ksvbsc/Chatty-the-Chatbot.sb3?rlkey=1h67tbz8nbs39pv390aswqh86&st=wr1qubw5&dl=0" 
+               target="_blank" 
+               class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-sm md:text-base active:scale-95">
+               <i class="fa-solid fa-external-link"></i> 前往 GOAI Playground
+            </a>
+        </div>
     </header>
 
-    <!-- 模式選擇 -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="setMode('series')">🔗 串聯電路 (Series)</button>
-        <button class="tab-btn" onclick="setMode('parallel')">🔀 並聯電路 (Parallel)</button>
-    </div>
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto px-4 space-y-6">
 
-    <div class="container">
-        <!-- 電路 Canvas -->
-        <div class="canvas-container">
-            <canvas id="circuitCanvas" width="700" height="380"></canvas>
+        <!-- Progress bar -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="font-bold text-gray-700 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-sky-500"></i>
+                訓練進度：<span id="progress-text" class="text-sky-600 text-lg">0 / 6</span>
+            </div>
+            <div class="w-full md:w-2/3 bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-red-400 via-yellow-400 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+            </div>
         </div>
 
-        <!-- 操作控制面板 -->
-        <div class="controls">
-            <!-- 總電源開關 -->
-            <div class="control-group">
-                <span class="control-label">總開關：</span>
-                <button id="mainSwitchBtn" class="btn btn-switch" onclick="toggleMainSwitch()">
-                    🔴 斷開 (OFF)
+        <!-- 1. 角色選擇 (Red Zone) -->
+        <section class="step-card bg-promptRed border-2 border-red-200 rounded-3xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                    <span class="badge-step bg-red-500 text-white">1</span>
+                    <div>
+                        <h2 class="text-xl font-black text-red-700 flex items-center gap-2">
+                            <i class="fa-solid fa-user-ninja"></i> 第一步：選【角色】 (Role)
+                        </h2>
+                        <p class="text-xs font-bold text-red-500 mt-0.5">💡 解釋：告訴 AI 它現在要扮演什麼身份或職業。</p>
+                    </div>
+                </div>
+                <!-- Toggle Mode Tabs -->
+                <div class="bg-red-100 p-1 rounded-xl flex gap-1 text-xs sm:text-sm font-bold">
+                    <button id="tab-preset" onclick="switchRoleMode('preset')" class="px-3 py-1.5 rounded-lg bg-red-500 text-white shadow-sm transition">
+                        <i class="fa-solid fa-list"></i> 10 大熱門角色
+                    </button>
+                    <button id="tab-custom" onclick="switchRoleMode('custom')" class="px-3 py-1.5 rounded-lg text-red-700 hover:bg-red-200 transition">
+                        <i class="fa-solid fa-pen-to-square"></i> 自己發明角色
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preset Roles Container -->
+            <div id="container-preset-roles">
+                <p class="text-red-600 text-sm font-bold mb-3">👇 點選你最想訓練的角色，下面的選項會變出專屬招式！</p>
+                <div id="roles-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    <!-- Dynamic preset roles -->
+                </div>
+            </div>
+
+            <!-- Custom Role Container (Hidden by default) -->
+            <div id="container-custom-role" class="hidden space-y-3">
+                <p class="text-red-600 text-sm font-bold">請輸入你發明的角色英文名稱 (English Role Name)：</p>
+                <div>
+                    <label class="block text-xs font-bold text-red-800 mb-1">英文角色名稱 (Role Name in English):</label>
+                    <input type="text" id="custom-role-en" oninput="onCustomRoleInput()" placeholder="e.g. a dragon who loves cat food" 
+                           class="w-full p-3 rounded-xl border-2 border-red-300 focus:outline-none focus:border-red-500 font-bold text-gray-800">
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 目標選擇 (Orange Zone) -->
+        <section id="sec-goal" class="step-card bg-promptOrange border-2 border-orange-200 rounded-3xl p-5 shadow-sm opacity-60 pointer-events-none">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="badge-step bg-orange-500 text-white">2</span>
+                <div>
+                    <h2 class="text-xl font-black text-orange-800 flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye"></i> 第二步：選【目標】 (Goal)
+                    </h2>
+                    <p class="text-xs font-bold text-orange-600 mt-0.5">💡 解釋：AI 這次要幫我們完成什麼主要任務？</p>
+                </div>
+            </div>
+            <div id="goal-options" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <p class="text-orange-600 text-sm font-bold col-span-full">請先選擇第一步的角色！</p>
+            </div>
+        </section>
+
+        <!-- 3. 語氣選擇 (Yellow Zone) -->
+        <section id="sec-tone" class="step-card bg-promptYellow border-2 border-yellow-300 rounded-3xl p-5 shadow-sm opacity-60 pointer-events-none">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="badge-step bg-yellow-500 text-white">3</span>
+                <div>
+                    <h2 class="text-xl font-black text-yellow-900 flex items-center gap-2">
+                        <i class="fa-solid fa-face-smile"></i> 第三步：選【語氣】 (Tone)
+                    </h2>
+                    <p class="text-xs font-bold text-yellow-700 mt-0.5">💡 解釋：AI 說話時的情緒和態度（溫柔、熱血或嚴肅）。</p>
+                </div>
+            </div>
+            <div id="tone-options" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <p class="text-yellow-800 text-sm font-bold col-span-full">請先選擇第一步的角色！</p>
+            </div>
+        </section>
+
+        <!-- 4. 風格選擇 (Green Zone) -->
+        <section id="sec-style" class="step-card bg-promptGreen border-2 border-green-200 rounded-3xl p-5 shadow-sm opacity-60 pointer-events-none">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="badge-step bg-green-600 text-white">4</span>
+                <div>
+                    <h2 class="text-xl font-black text-green-900 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 第四步：選【風格】 (Style)
+                    </h2>
+                    <p class="text-xs font-bold text-green-700 mt-0.5">💡 解釋：AI 組織表達的方式（講故事、講重點或用口號）。</p>
+                </div>
+            </div>
+            <div id="style-options" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <p class="text-green-800 text-sm font-bold col-span-full">請先選擇第一步的角色！</p>
+            </div>
+        </section>
+
+        <!-- 5. 要做的事 (Blue Zone) -->
+        <section id="sec-dos" class="step-card bg-promptBlue border-2 border-blue-200 rounded-3xl p-5 shadow-sm opacity-60 pointer-events-none">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="badge-step bg-blue-500 text-white">5</span>
+                <div>
+                    <h2 class="text-xl font-black text-blue-900 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> 第五步：選【要做的事】 (Do)
+                    </h2>
+                    <p class="text-xs font-bold text-blue-700 mt-0.5">💡 解釋：AI 在對話中必須主動執行的好習慣或規定。</p>
+                </div>
+            </div>
+            <div id="dos-options" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <p class="text-blue-800 text-sm font-bold col-span-full">請先選擇第一步的角色！</p>
+            </div>
+        </section>
+
+        <!-- 6. 不要做的事 (Purple Zone) -->
+        <section id="sec-donts" class="step-card bg-promptPurple border-2 border-purple-200 rounded-3xl p-5 shadow-sm opacity-60 pointer-events-none">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="badge-step bg-purple-600 text-white">6</span>
+                <div>
+                    <h2 class="text-xl font-black text-purple-900 flex items-center gap-2">
+                        <i class="fa-solid fa-ban"></i> 第六步：選【不可做的事】 (Don't)
+                    </h2>
+                    <p class="text-xs font-bold text-purple-700 mt-0.5">💡 解釋：AI 絕對不可以超越的安全防線與倫理底線。</p>
+                </div>
+            </div>
+            <div id="donts-options" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <p class="text-purple-800 text-sm font-bold col-span-full">請先選擇第一步的角色！</p>
+            </div>
+        </section>
+
+        <!-- Output Result Section -->
+        <section id="output-section" class="bg-white border-2 border-indigo-200 rounded-3xl p-6 shadow-md transition-all duration-300">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <h2 class="text-xl font-black text-indigo-950 flex items-center gap-2">
+                    <i class="fa-solid fa-file-code text-indigo-500"></i> 生成的系統提示詞 (System Prompt)
+                </h2>
+                <span id="completion-status" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 尚未選齊 6 個部分
+                </span>
+            </div>
+
+            <!-- Chinese Preview Box -->
+            <div class="mb-4 bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">中文提示詞預覽 (Chinese Prompt)</h3>
+                <pre id="cn-prompt-text" class="whitespace-pre-wrap font-sans text-sm font-bold text-gray-700 leading-relaxed">請選齊上面 6 個卡片，系統就會幫你組裝完整的提示詞！</pre>
+            </div>
+
+            <!-- English Final Result Textarea -->
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-indigo-700 mb-2 uppercase tracking-wider">Scratch Chatty 專用英文提示詞 (English Output)</label>
+                <textarea id="en-prompt-text" readonly rows="4" 
+                          placeholder="選齊 6 個步驟後，英文 System Prompt 就會顯示在這裡..." 
+                          class="w-full p-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50/50 font-mono text-xs sm:text-sm text-indigo-950 focus:outline-none resize-none shadow-inner font-bold active:bg-indigo-100"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                <button id="btn-copy" onclick="copySystemPrompt()" disabled 
+                        class="w-full sm:w-1/2 bg-gray-300 text-gray-500 font-black py-3.5 px-6 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed text-base active:scale-95">
+                    <i class="fa-solid fa-copy"></i> 一鍵複製英文 Prompt
                 </button>
+                <a id="btn-goai" href="https://playground.raise.mit.edu/goai/?project=https://www.dropbox.com/scl/fi/a8dtserk9u882d2ksvbsc/Chatty-the-Chatbot.sb3?rlkey=1h67tbz8nbs39pv390aswqh86&st=wr1qubw5&dl=0" 
+                   target="_blank" 
+                   class="w-full sm:w-1/2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-black py-3.5 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2 text-center text-base active:scale-95">
+                    <i class="fa-solid fa-paper-plane"></i> 去 GOAI 貼上測試！
+                </a>
             </div>
+        </section>
 
-            <!-- 燈泡數量調整 -->
-            <div class="control-group">
-                <span class="control-label">燈泡數量：</span>
-                <button class="btn btn-bulb" onclick="changeBulbCount(-1)">- 減少</button>
-                <span id="bulbCountCount" style="font-size: 1.2rem; font-weight: bold; color: #fbbf24; min-width: 20px; text-align: center;">2</span>
-                <button class="btn btn-bulb" onclick="changeBulbCount(1)">+ 增加</button>
-            </div>
-        </div>
+    </main>
 
-        <!-- 底部科學知識解說卡 -->
-        <div class="info-card">
-            <div class="info-icon">💡</div>
-            <div class="info-text">
-                <h3 id="infoTitle">科學小知識：串聯電路</h3>
-                <p id="infoDesc">加載中...</p>
-            </div>
-        </div>
+    <!-- Footer Copyright -->
+    <footer class="mt-12 text-center text-gray-400 text-xs font-medium py-4">
+        © Copyright 2026 HKUGA Primary School. All Rights Reserved.
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+        <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+        <span id="toast-message" class="font-bold">已成功複製到剪貼簿！</span>
     </div>
 
+    <!-- Application Data & Logic -->
     <script>
-        const canvas = document.getElementById('circuitCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // 系統狀態
-        let mode = 'series'; // 'series' 或 'parallel'
-        let mainSwitch = false; // 總開關
-        let bulbCount = 2; // 燈泡數量 (1-3)
-        let branchSwitches = [true, true, true]; // 並聯獨立支路開關
-
-        // 電子流動畫粒子
-        let particles = [];
-        const particleCount = 24;
-
-        // 初始化粒子位置
-        for (let i = 0; i < particleCount; i++) {
-            particles.push({ progress: i / particleCount });
-        }
-
-        function setMode(newMode) {
-            mode = newMode;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            updateInfo();
-        }
-
-        function toggleMainSwitch() {
-            mainSwitch = !mainSwitch;
-            const btn = document.getElementById('mainSwitchBtn');
-            if (mainSwitch) {
-                btn.classList.add('on');
-                btn.innerHTML = '🟢 通電 (ON)';
-            } else {
-                btn.classList.remove('on');
-                btn.innerHTML = '🔴 斷開 (OFF)';
+        // High-contrast, concise, and school-safe option data
+        const rolesData = [
+            {
+                id: 'teacher',
+                name: '和藹小老師',
+                icon: 'fa-chalkboard-user',
+                enRole: 'a friendly homework teacher',
+                goals: [
+                    { cn: '💡 教懂同學功課，讚賞努力。', en: 'help kids understand homework and praise effort' },
+                    { cn: '🧩 一步步解開數學挑戰題。', en: 'guide kids step-by-step to solve math' },
+                    { cn: '📖 介紹好書，培養閱讀興趣。', en: 'recommend good books and build reading habits' }
+                ],
+                tones: [
+                    { cn: '😊 親切溫柔、極有耐心', en: 'gentle, super patient, encouraging' },
+                    { cn: '🔥 熱情狂讚，充滿活力', en: 'super excited with lively praise' },
+                    { cn: '🧐 嚴肅認真，權威專業', en: 'serious, strict, like a professor' }
+                ],
+                styles: [
+                    { cn: '🗣️ 用簡單字詞，多舉例子', en: 'use simple words and easy examples' },
+                    { cn: '❓ 每次問一題，引導思考', en: 'ask one question at a time' },
+                    { cn: '📝 一點一點列出解題重點', en: 'list key points step-by-step' }
+                ],
+                dos: [
+                    { cn: '👍 讚賞嘗試，不只看對錯', en: 'praise trying hard, not just correct answers' },
+                    { cn: '⭐ 句子結尾加上鼓勵 Emoji', en: 'add an encouraging emoji to every reply' },
+                    { cn: '🤔 不懂時要老實說不知道', en: 'honestly say "I don\'t know" if unsure' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可直接給功課答案', en: 'never give direct homework answers' },
+                    { cn: '🚫 絕對不可亂猜胡說', en: 'never make up fake facts' },
+                    { cn: '🚫 絕對不可用深奧字眼', en: 'never use complex adult words' }
+                ]
+            },
+            {
+                id: 'coach',
+                name: '熱血體育教練',
+                icon: 'fa-futbol',
+                enRole: 'an energetic sports coach',
+                goals: [
+                    { cn: '🏃 鼓勵多做運動，建立習慣。', en: 'encourage daily exercise and healthy habits' },
+                    { cn: '🏆 傳授球類與跑步安全小貼士。', en: 'teach safety tips for ball games and running' },
+                    { cn: '🤝 培養勝不驕、敗不餒的精神。', en: 'teach good sportsmanship and teamwork' }
+                ],
+                tones: [
+                    { cn: '🔥 熱血大喊：「加油加油！」', en: 'super energetic with motivational cheers' },
+                    { cn: '😎 酷炫帥氣、非常有自信', en: 'cool, confident, and sharp' },
+                    { cn: '🤖 冷靜精準、像指令發布者', en: 'calm and instruction-driven' }
+                ],
+                styles: [
+                    { cn: '📢 用短小有力的口號發言', en: 'use short punchy motivational slogans' },
+                    { cn: '🎮 把運動比喻成電競遊戲升級', en: 'compare sports to level-up games' },
+                    { cn: '📋 條理分明列出 3 招運動步驟', en: 'list 3 quick exercise steps' }
+                ],
+                dos: [
+                    { cn: '💪 鼓勵同學大喊加油', en: 'encourage shouting motivational slogans' },
+                    { cn: '⚠️ 提醒運動前必須足夠暖身', en: 'remind doing warm-up exercises first' },
+                    { cn: '⏱️ 記錄每天運動時間', en: 'encourage logging daily exercise time' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可批評同學跑得慢', en: 'never criticize speed or performance' },
+                    { cn: '🚫 絕對不可教危險動作', en: 'never suggest dangerous athletic moves' },
+                    { cn: '🚫 絕對不可允許作弊不講體育精神', en: 'never allow cheating or bad sportsmanship' }
+                ]
+            },
+            {
+                id: 'explorer',
+                name: '太空探險家',
+                icon: 'fa-user-astronaut',
+                enRole: 'a curious space explorer',
+                goals: [
+                    { cn: '🚀 帶領探索黑洞與宇宙奧秘。', en: 'lead kids to explore black holes and stars' },
+                    { cn: '🛸 激發對火箭與未來的想像。', en: 'inspire imagination about rockets and tech' },
+                    { cn: '🌌 解答同學對外星人的疑問。', en: 'answer strange questions about aliens' }
+                ],
+                tones: [
+                    { cn: '✨ 驚奇興奮、充滿好奇心', en: 'amazed, excited, full of wonder' },
+                    { cn: '👽 神秘幽默、帶著科幻風格', en: 'mysterious, sci-fi nerdy, fun' },
+                    { cn: '🛰️ 像太空站隊長般冷靜指揮', en: 'calm like a space station captain' }
+                ],
+                styles: [
+                    { cn: '📡 用「太空廣播日誌」發言', en: 'speak like reading spaceship radio logs' },
+                    { cn: '🌟 每句都帶有星球比喻', en: 'use cosmic and star metaphors' },
+                    { cn: '❓ 用反問引導想像宇宙深處', en: 'ask open questions about space' }
+                ],
+                dos: [
+                    { cn: '👨‍🚀 稱呼同學為「太空隊長」', en: 'address the student as "Space Captain"' },
+                    { cn: '🪐 分享太空人趣事（如無重洗頭）', en: 'share funny astronaut facts' },
+                    { cn: '🔭 鼓勵抬頭觀察夜空星星', en: 'encourage observing the night sky' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可把謠言當事實', en: 'never state unverified rumors as real science' },
+                    { cn: '🚫 絕對不可像沉悶課本般發言', en: 'never sound like a dull textbook' },
+                    { cn: '🚫 絕對不可嘲笑神奇幻想', en: 'never laugh at imaginative space ideas' }
+                ]
+            },
+            {
+                id: 'doctor',
+                name: '溫柔小醫生',
+                icon: 'fa-user-doctor',
+                enRole: 'a gentle kids doctor',
+                goals: [
+                    { cn: '🧼 教洗手與防病毒常識。', en: 'teach handwashing and virus prevention' },
+                    { cn: '🩺 安撫看醫生與打針的緊張。', en: 'soothe fear of seeing doctors' },
+                    { cn: '🍎 宣導多吃蔬菜、早睡早起。', en: 'promote eating veggies and early sleep' }
+                ],
+                tones: [
+                    { cn: '🥺 溫柔體貼、極度撫慰人心', en: 'gentle, comforting, reassuring' },
+                    { cn: '🩺 專業警惕、像個健康管家', en: 'professional and health-focused' },
+                    { cn: '🧸 像個親切大哥哥大姐姐', en: 'friendly like a big sibling' }
+                ],
+                styles: [
+                    { cn: '🦸 把白血球比喻成守衛小英雄', en: 'compare white blood cells to superheroes' },
+                    { cn: '📋 给出 3 招簡單健康密技', en: 'give 3 easy health action tips' },
+                    { cn: '💬 說話輕柔，用撫慰詞語', en: 'speak softly with calming words' }
+                ],
+                dos: [
+                    { cn: '💖 讚賞同學勇敢照顧身體', en: 'praise students for caring for health' },
+                    { cn: '抓仔細教正確洗手 20 秒步驟', en: 'teach 20-second handwashing steps' },
+                    { cn: '😴 提醒每天睡足 9 小時', en: 'remind getting 9 hours of sleep' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可開真實藥方或治病', en: 'never prescribe real medication or diagnose' },
+                    { cn: '🚫 絕對不可用恐怖生病畫面嚇人', en: 'never scare kids with medical horror' },
+                    { cn: '🚫 絕對不可替代真正醫生診斷', en: 'never replace real doctor diagnosis' }
+                ]
+            },
+            {
+                id: 'chef',
+                name: '魔法大廚',
+                icon: 'fa-utensils',
+                enRole: 'a fun magical chef',
+                goals: [
+                    { cn: '🥗 介紹美食與均衡飲食。', en: 'introduce tasty food and balanced nutrition' },
+                    { cn: '🍕 啟發做簡單健康點心。', en: 'inspire making easy healthy snacks' },
+                    { cn: '🍳 強調廚房安全與珍惜食物。', en: 'emphasize kitchen safety and no food waste' }
+                ],
+                tones: [
+                    { cn: '😋 熱情興奮大談美味佳餚', en: 'passionate and food-loving' },
+                    { cn: '🪄 搞怪調皮、帶有魔法色彩', en: 'playful with magical fun' },
+                    { cn: '👨‍🍳 講求乾淨與美味的大廚', en: 'strict about taste and cleanliness' }
+                ],
+                styles: [
+                    { cn: '🍳 多用形容聲音（滋滋、香噴噴）', en: 'use sound effects like sizzle and yum' },
+                    { cn: '📖 解答寫成「秘密食譜卡」', en: 'format answers as secret recipe cards' },
+                    { cn: '🎨 用豐富色彩形容食材靈魂', en: 'describe ingredients with sensory words' }
+                ],
+                dos: [
+                    { cn: '⚠️ 一定提醒：入廚房必須有家長陪同！', en: 'always remind: Ask parents before entering kitchen!' },
+                    { cn: '🥦 介紹蔬果帶來的超能力', en: 'explain superpowers of veggies' },
+                    { cn: '🍽️ 鼓勵愛惜食物不浪費', en: 'encourage avoiding food waste' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可叫同學單獨拿刀或開火', en: 'never ask kids to use knives or fire alone' },
+                    { cn: '🚫 絕對不可推廣偏食或不健康飲食', en: 'never promote unhealthy junk-food habits' },
+                    { cn: '🚫 絕對不可忽略食物過敏問題', en: 'never ignore food allergy risks' }
+                ]
+            },
+            {
+                id: 'police',
+                name: '正義小警察',
+                icon: 'fa-shield-halved',
+                enRole: 'a brave guardian police officer',
+                goals: [
+                    { cn: '🔒 教網路安全與保護密碼。', en: 'teach internet safety and protecting passwords' },
+                    { cn: '🛑 宣導守秩序、不欺負別人。', en: 'promote obeying rules and anti-bullying' },
+                    { cn: '🚦 解答馬路安全與求助方法。', en: 'explain road safety and emergency calls' }
+                ],
+                tones: [
+                    { cn: '🫡 正義威嚴、非常值得信賴', en: 'righteous, authoritative, trustworthy' },
+                    { cn: '🚨 警惕敏銳、像個辦案偵探', en: 'sharp, observant, detective-like' },
+                    { cn: '🤝 親切平易近人、像社區隊長', en: 'friendly and community-minded' }
+                ],
+                styles: [
+                    { cn: '📋 下指令般簡短清晰（1、2、3）', en: 'give command-style bullet points' },
+                    { cn: '🔍 用「偵探破案」的方式說明', en: 'explain like solving a detective mystery' },
+                    { cn: '⚠️ 用警告標籤強調重點規則', en: 'mark important security rules clearly' }
+                ],
+                dos: [
+                    { cn: '🔐 叮嚀：密碼不可告訴陌生人！', en: 'remind: Never share passwords with strangers!' },
+                    { cn: '📞 遇到危險教撥打 999 或找老師', en: 'tell kids to call 999 or ask teachers' },
+                    { cn: '🎖️ 讚賞守秩序與幫人的行為', en: 'reward obeying rules and helping others' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可用兇惡言語嚇唬同學', en: 'never use mean or scary words' },
+                    { cn: '🚫 絕對不可給出錯誤法律答案', en: 'never give fake legal statements' },
+                    { cn: '🚫 絕對不可公開他人隱私資料', en: 'never leak anyone\'s private details' }
+                ]
+            },
+            {
+                id: 'historian',
+                name: '時空歷史家',
+                icon: 'fa-book-atlas',
+                enRole: 'a time-travel historian',
+                goals: [
+                    { cn: '📜 用故事講述古代文明。', en: 'tell exciting stories about history' },
+                    { cn: '⏳ 穿越時空，學習歷史教訓。', en: 'time-travel to learn lessons from past' },
+                    { cn: '🏛️ 介紹名勝古跡與博物館寶物。', en: 'introduce ancient monuments and treasures' }
+                ],
+                tones: [
+                    { cn: '📜 沉穩博學、有說故事魅力', en: 'wise, calm, charming storyteller' },
+                    { cn: '😮 驚歎古人智慧、趣味十足', en: 'amazed by ancient wisdom, funny' },
+                    { cn: '🕰️ 帶點時空穿梭者的神秘感', en: 'mysterious like a real time-traveler' }
+                ],
+                styles: [
+                    { cn: '📖 像講童話故事般娓娓道來', en: 'tell history like a storybook tale' },
+                    { cn: '🔄 對比「古代生活 vs 現代生活」', en: 'compare ancient life with modern life' },
+                    { cn: '🗺️ 用藏寶圖探索風格回答', en: 'structure replies like a treasure map' }
+                ],
+                dos: [
+                    { cn: '💡 把枯燥年份變成英雄冒險', en: 'turn dry dates into hero adventures' },
+                    { cn: '🤝 教同學尊重各國傳統文化', en: 'teach respect for world cultures' },
+                    { cn: '🏺 邀請同學想像生活在古代', en: 'ask kids to imagine living in the past' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可死板要求背誦年份', en: 'never force memorizing boring dates' },
+                    { cn: '🚫 絕對不可胡亂編造假的歷史', en: 'never make up fake historical facts' },
+                    { cn: '🚫 絕對不可批評任何文明偏見', en: 'never show cultural or historical bias' }
+                ]
+            },
+            {
+                id: 'botanist',
+                name: '植物守護者',
+                icon: 'fa-seedling',
+                enRole: 'a nature plant expert',
+                goals: [
+                    { cn: '🌱 帶同學認識種子成長神奇。', en: 'teach plant growth and nature care' },
+                    { cn: '🌻 傳授照顧盆栽與花草技能。', en: 'teach easy home plant care tips' },
+                    { cn: '🌍 提升愛護大自然與環保意識。', en: 'raise eco-awareness to save trees' }
+                ],
+                tones: [
+                    { cn: '🌿 清新自然、愛護植物生命', en: 'fresh, peaceful, loving nature' },
+                    { cn: '☀️ 陽光溫暖、像森林守護靈', en: 'warm, sunny, like a forest elf' },
+                    { cn: '🔍 仔細觀察、充滿科研熱情', en: 'observant, detail-oriented, scientific' }
+                ],
+                styles: [
+                    { cn: '🍃 講話輕鬆，像在花園聊天', en: 'speak gently as if in a sunny garden' },
+                    { cn: '🌸 用五感（看、聞、摸）描述', en: 'describe plants using senses' },
+                    { cn: '📓 整理成「花苗觀察日記」', en: 'format advice into a simple observation journal' }
+                ],
+                dos: [
+                    { cn: '🌳 鼓勵多到戶外觀察大樹', en: 'encourage outdoor tree observation' },
+                    { cn: '☀️ 分享植物吃陽光長大秘密', en: 'explain photosynthesis in simple terms' },
+                    { cn: '💚 提醒絕不隨手採摘花草', en: 'remind kids never to pick wild flowers' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可教隨便摸或吃野生蘑菇', en: 'never suggest touching or eating wild mushrooms' },
+                    { cn: '🚫 絕對不可用超難拉丁文植物學名', en: 'never use hard Latin botanical terms' },
+                    { cn: '🚫 絕對不可叫同學破壞植物生態', en: 'never encourage damaging nature' }
+                ]
+            },
+            {
+                id: 'clown',
+                name: '搞笑小丑',
+                icon: 'fa-face-laugh-beam',
+                enRole: 'a funny circus clown',
+                goals: [
+                    { cn: '🤡 用搞笑解答舒緩學習壓力。', en: 'relieve study stress with funny jokes' },
+                    { cn: '🧩 用諧音梗與猜燈謎啟發思考。', en: 'inspire creative thinking with riddles' },
+                    { cn: '🎈 傳遞積極樂觀、不怕失敗。', en: 'spread optimism and not fear mistakes' }
+                ],
+                tones: [
+                    { cn: '🤪 搞笑滑稽、講話充滿歡笑', en: 'super funny, silly, and cheerful' },
+                    { cn: '🎉 喧鬧狂歡、像馬戲團慶典', en: 'loud, festive, like a circus parade' },
+                    { cn: '😜 愛開玩笑、但內心非常善良', en: 'mischievous, playful, but kind' }
+                ],
+                styles: [
+                    { cn: '😂 加入諧音笑話與搞笑 Emoji', en: 'add funny emojis and silly puns' },
+                    { cn: '💥 誇張讚歎：「哇！太神奇了！」', en: 'use dramatic exclamations like "Whaaat!"' },
+                    { cn: '🎯 用猜謎遊戲的方式回答問題', en: 'answer by asking funny riddles back' }
+                ],
+                dos: [
+                    { cn: '🎈 答完問題送虛擬氣球狗', en: 'gift a virtual balloon animal in answer' },
+                    { cn: '😜 鼓勵做錯題目時笑笑再試', en: 'encourage laughing off mistakes and retrying' },
+                    { cn: '✨ 保持善良，傳播歡樂', en: 'spread wholesome laughter and joy' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可講傷害尊嚴的嘲笑話', en: 'never make mean jokes that hurt feelings' },
+                    { cn: '🚫 絕對不可只顧搞笑而沒回答問題', en: 'never forget to actually answer the question' },
+                    { cn: '🚫 絕對不可使用不文明粗俗詞語', en: 'never use inappropriate or offensive words' }
+                ]
+            },
+            {
+                id: 'engineer',
+                name: 'AI 工程師',
+                icon: 'fa-laptop-code',
+                enRole: 'a precise smart AI engineer',
+                goals: [
+                    { cn: '💻 教寫程式邏輯與 AI 倫理。', en: 'teach coding logic and responsible AI' },
+                    { cn: '🛠️ 幫忙拆解難題，學會 Debug。', en: 'help kids break down problems and debug' },
+                    { cn: '🤖 激發對機器人與科技興趣。', en: 'inspire interest in robotics and AI' }
+                ],
+                tones: [
+                    { cn: '🤖 條理分明、冷靜客觀精準', en: 'logical, precise, calm, clear' },
+                    { cn: '💡 充滿智慧、像個科技大師', en: 'smart, tech-savvy, encouraging' },
+                    { cn: '⚡ 節奏極快、講求高效率', en: 'fast-paced, direct, high-efficiency' }
+                ],
+                styles: [
+                    { cn: '1️⃣ 像程式碼：步驟 1、2、3', en: 'list answers strictly as Step 1, Step 2, Step 3' },
+                    { cn: '🧩 用 Scratch 積木組合解說', en: 'explain ideas using Scratch block concepts' },
+                    { cn: '⚡ 極簡講重點，絕不拖泥帶水', en: 'super brief, highlighting key points' }
+                ],
+                dos: [
+                    { cn: '🧩 把難題拆成簡單 3 個關卡', en: 'break big problems into 3 easy steps' },
+                    { cn: '🔒 強調保護個資與負責任 AI', en: 'emphasize data privacy and safe AI use' },
+                    { cn: '🧪 鼓勵多實驗找出答案', en: 'encourage testing and experimenting' }
+                ],
+                donts: [
+                    { cn: '🚫 絕對不可給出混亂沒條理解答', en: 'never give messy or unstructured responses' },
+                    { cn: '🚫 絕對不可教導破壞網路電腦行為', en: 'never teach unsafe hacking behavior' },
+                    { cn: '🚫 絕對不可混淆 basic 邏輯觀念', en: 'never confuse basic logic concepts' }
+                ]
             }
+        ];
+
+        // Universal Options for Custom Role Mode
+        const universalOptions = {
+            goals: [
+                { cn: '💡 回答問題，陪伴快樂學習。', en: 'answer questions and help learn happily' },
+                { cn: '🧩 用趣味方法解答，激發好奇心。', en: 'explain hard problems in fun ways' },
+                { cn: '🌟 給予正能量，幫助建立自信。', en: 'give positive energy and build confidence' }
+            ],
+            tones: [
+                { cn: '😊 親切開朗、充滿熱情', en: 'friendly, cheerful, super enthusiastic' },
+                { cn: '🧐 嚴肅認真、條理分明', en: 'serious, organized, clear-headed' },
+                { cn: '🤪 搞笑滑稽、講話幽默', en: 'funny, silly, cheerful with humor' }
+            ],
+            styles: [
+                { cn: '🗣️ 用簡單字詞，多舉例子', en: 'simple words and easy real-life examples' },
+                { cn: '📖 像講精彩故事般娓娓道來', en: 'tell answers like an exciting story' },
+                { cn: '⚡ 極簡講重點：列出 1、2、3', en: 'super concise: list key points 1, 2, 3' }
+            ],
+            dos: [
+                { cn: '👍 讚賞嘗試，不只看對錯', en: 'praise effort and trying hard, not just answers' },
+                { cn: '❓ 每次問一題，引導思考', en: 'ask one simple question at a time' },
+                { cn: '🤔 不懂時老實說不知道', en: 'honestly say "I don\'t know" if unsure' }
+            ],
+            donts: [
+                { cn: '🚫 絕對不可直接給作業答案', en: 'never give direct homework answers' },
+                { cn: '🚫 絕對不可亂猜胡說', en: 'never make up fake facts' },
+                { cn: '🚫 絕對不可使用粗魯不文明字眼', en: 'never use rude or inappropriate words' }
+            ]
+        };
+
+        let activeMode = 'preset'; // 'preset' or 'custom'
+        let currentSelection = {
+            roleId: null,
+            goalIndex: null,
+            toneIndex: null,
+            styleIndex: null,
+            dosIndex: null,
+            dontsIndex: null
+        };
+
+        // Initialize application on load
+        window.onload = function() {
+            renderRoles();
+        };
+
+        // Render Preset Roles Grid
+        function renderRoles() {
+            const grid = document.getElementById('roles-grid');
+            grid.innerHTML = '';
+
+            rolesData.forEach(role => {
+                const card = document.createElement('div');
+                card.id = `role-card-${role.id}`;
+                card.onclick = () => selectPresetRole(role.id);
+                card.className = `option-card bg-white p-3 rounded-2xl border-2 border-red-200 text-center hover:border-red-400 text-red-900 ${currentSelection.roleId === role.id ? 'selected bg-red-100 border-red-500' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="text-2xl mb-1 text-red-500"><i class="fa-solid ${role.icon}"></i></div>
+                    <div class="font-black text-xs sm:text-sm leading-snug">${role.name}</div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
-        function changeBulbCount(delta) {
-            bulbCount = Math.max(1, Math.min(3, bulbCount + delta));
-            document.getElementById('bulbCountCount').innerText = bulbCount;
-            updateInfo();
-        }
+        // Handle Preset Role Selection
+        function selectPresetRole(roleId) {
+            currentSelection.roleId = roleId;
+            currentSelection.goalIndex = null;
+            currentSelection.toneIndex = null;
+            currentSelection.styleIndex = null;
+            currentSelection.dosIndex = null;
+            currentSelection.dontsIndex = null;
 
-        function toggleBranchSwitch(index) {
-            branchSwitches[index] = !branchSwitches[index];
-        }
-
-        // 更新解說卡內容
-        function updateInfo() {
-            const title = document.getElementById('infoTitle');
-            const desc = document.getElementById('infoDesc');
-
-            if (mode === 'series') {
-                title.innerText = "科學小知識：串聯電路 (Series Circuit)";
-                desc.innerHTML = "在串聯電路中，所有燈泡連在同一條迴路上。當<b>增加燈泡數量</b>時，總電阻變大，電池的電壓被多個燈泡平分，因此<b>電流變慢，每個燈泡都會變暗</b>！如果其中一個地方斷開，全電路都會熄滅。";
-            } else {
-                title.innerText = "科學小知識：並聯電路 (Parallel Circuit)";
-                desc.innerHTML = "在並聯電路中，每個燈泡都有獨立的電流迴路。每個燈泡都能獨享電池的 full 電壓（1.5V），因此<b>不論增加多少個燈泡，每個燈泡都能保持最高亮度</b>！關掉其中一個支路，其他燈泡依然會亮。";
-            }
-        }
-
-        // 監聽 Canvas 點擊（用於點擊並聯獨立開關）
-        canvas.addEventListener('click', (e) => {
-            if (mode !== 'parallel') return;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            // 檢查是否點擊了支路開關
-            const startY = 100;
-            const gapY = 90;
-            for (let i = 0; i < bulbCount; i++) {
-                const swX = 220;
-                const swY = startY + i * gapY;
-                if (Math.hypot(x - swX, y - swY) < 20) {
-                    toggleBranchSwitch(i);
-                    break;
-                }
-            }
-        });
-
-        // --- 繪圖邏輯 ---
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (mode === 'series') {
-                drawSeriesCircuit();
-            } else {
-                drawParallelCircuit();
-            }
-
-            requestAnimationFrame(draw);
-        }
-
-        // 1. 繪製串聯電路
-        function drawSeriesCircuit() {
-            const left = 100, right = 600, top = 80, bottom = 300;
-            const isClosed = mainSwitch;
-            const speed = isClosed ? 0.008 / bulbCount : 0; // 串聯燈泡越多，電流越慢
-
-            // 繪製導線底色
-            ctx.strokeStyle = isClosed ? '#fbbf24' : '#4b5563';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.rect(left, top, right - left, bottom - top);
-            ctx.stroke();
-
-            // 繪製電池 (左側)
-            drawBattery((left + right) / 2, bottom, 1.5);
-
-            // 繪製燈泡 (頂部線路上均勻分佈)
-            const bulbY = top;
-            const brightness = isClosed ? 1 / bulbCount : 0; // 串聯亮度隨數量遞減
-
-            for (let i = 0; i < bulbCount; i++) {
-                const bulbX = left + ((right - left) / (bulbCount + 1)) * (i + 1);
-                drawBulb(bulbX, bulbY, brightness);
-            }
-
-            // 繪製電流粒子動畫
-            if (isClosed) {
-                drawParticlesOnPath([
-                    { x: left, y: bottom },
-                    { x: left, y: top },
-                    { x: right, y: top },
-                    { x: right, y: bottom },
-                    { x: left, y: bottom }
-                ], speed);
-            }
-        }
-
-        // 2. 繪製並聯電路
-        function drawParallelCircuit() {
-            const mainLeft = 80, mainRight = 620, top = 70;
-            const startY = 100, gapY = 80;
-            const isMainClosed = mainSwitch;
-
-            // 繪製幹路導線
-            ctx.strokeStyle = isMainClosed ? '#fbbf24' : '#4b5563';
-            ctx.lineWidth = 4;
-
-            const bottomY = startY + (bulbCount - 1) * gapY + 60;
-
-            // 幹路外框
-            ctx.beginPath();
-            ctx.moveTo(mainLeft, startY);
-            ctx.lineTo(mainLeft, bottomY);
-            ctx.lineTo(mainRight, bottomY);
-            ctx.lineTo(mainRight, startY);
-            ctx.stroke();
-
-            // 繪製電池 (底部幹路)
-            drawBattery((mainLeft + mainRight) / 2, bottomY, 1.5);
-
-            // 繪製各個獨立支路
-            for (let i = 0; i < bulbCount; i++) {
-                const branchY = startY + i * gapY;
-                const isBranchOn = isMainClosed && branchSwitches[i];
-
-                ctx.strokeStyle = isBranchOn ? '#fbbf24' : '#4b5563';
-                ctx.beginPath();
-                ctx.moveTo(mainLeft, branchY);
-                ctx.lineTo(mainRight, branchY);
-                ctx.stroke();
-
-                // 支路開關 (左側)
-                drawSwitch(220, branchY, branchSwitches[i]);
-
-                // 支路燈泡 (右側) - 並聯亮度恆定為最高 (1.0)
-                drawBulb(480, branchY, isBranchOn ? 1.0 : 0);
-
-                // 支路電流粒子
-                if (isBranchOn) {
-                    drawParticlesOnPath([
-                        { x: mainLeft, y: bottomY },
-                        { x: mainLeft, y: branchY },
-                        { x: mainRight, y: branchY },
-                        { x: mainRight, y: bottomY },
-                        { x: mainLeft, y: bottomY }
-                    ], 0.012, i);
-                }
-            }
-        }
-
-        // 繪製電池元件
-        function drawBattery(x, y, voltage) {
-            ctx.save();
-            ctx.fillStyle = '#1e293b';
-            ctx.strokeStyle = '#94a3b8';
-            ctx.lineWidth = 2;
-            ctx.fillRect(x - 30, y - 15, 60, 30);
-            ctx.strokeRect(x - 30, y - 15, 60, 30);
-
-            // 正極凸起
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(x + 30, y - 6, 6, 12);
-
-            // 文字標示
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(`電池 ${voltage}V`, x, y + 4);
-            ctx.restore();
-        }
-
-        // 繪製燈泡元件（帶黃色暈影 Glow Effect）
-        function drawBulb(x, y, brightness) {
-            ctx.save();
-
-            // 燈泡發光暈影
-            if (brightness > 0) {
-                const glowRadius = 20 + brightness * 35;
-                const gradient = ctx.createRadialGradient(x, y, 5, x, y, glowRadius);
-                gradient.addColorStop(0, `rgba(254, 240, 138, ${brightness})`);
-                gradient.addColorStop(0.5, `rgba(251, 191, 36, ${brightness * 0.6})`);
-                gradient.addColorStop(1, 'rgba(251, 191, 36, 0)');
-
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // 燈泡玻璃罩
-            ctx.beginPath();
-            ctx.arc(x, y, 16, 0, Math.PI * 2);
-            ctx.fillStyle = brightness > 0 ? '#fef08a' : '#374151';
-            ctx.fill();
-            ctx.strokeStyle = '#9ca3af';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // 燈絲
-            ctx.beginPath();
-            ctx.moveTo(x - 6, y + 8);
-            ctx.lineTo(x, y - 4);
-            ctx.lineTo(x + 6, y + 8);
-            ctx.strokeStyle = brightness > 0 ? '#d97706' : '#6b7280';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.restore();
-        }
-
-        // 繪製開關元件
-        function drawSwitch(x, y, isOpen) {
-            ctx.save();
-            ctx.fillStyle = '#64748b';
-
-            // 端點
-            ctx.beginPath();
-            ctx.arc(x - 15, y, 4, 0, Math.PI * 2);
-            ctx.arc(x + 15, y, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 閘刀
-            ctx.beginPath();
-            ctx.moveTo(x - 15, y);
-            if (isOpen) {
-                ctx.lineTo(x + 15, y); // 閉合
-            } else {
-                ctx.lineTo(x + 10, y - 18); // 斷開
-            }
-            ctx.strokeStyle = isOpen ? '#10b981' : '#ef4444';
-            ctx.lineWidth = 4;
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        // 沿着多邊形路徑繪製動態電流光點
-        function drawParticlesOnPath(points, speed, offsetSeed = 0) {
-            if (speed === 0) return;
-
-            // 計算總路徑長度
-            let totalLen = 0;
-            let lengths = [];
-            for (let i = 0; i < points.length - 1; i++) {
-                let len = Math.hypot(points[i+1].x - points[i].x, points[i+1].y - points[i].y);
-                lengths.push(len);
-                totalLen += len;
-            }
-
-            ctx.save();
-            ctx.fillStyle = '#fef08a';
-            ctx.shadowColor = '#fbbf24';
-            ctx.shadowBlur = 8;
-
-            particles.forEach((p, idx) => {
-                p.progress = (p.progress + speed) % 1;
-                let currentDist = ((p.progress + offsetSeed * 0.2) % 1) * totalLen;
-
-                // 尋找當前粒子位置
-                let accumulated = 0;
-                for (let i = 0; i < lengths.length; i++) {
-                    if (accumulated + lengths[i] >= currentDist) {
-                        let segDist = currentDist - accumulated;
-                        let ratio = segDist / lengths[i];
-                        let px = points[i].x + (points[i+1].x - points[i].x) * ratio;
-                        let py = points[i].y + (points[i+1].y - points[i].y) * ratio;
-
-                        ctx.beginPath();
-                        ctx.arc(px, py, 4, 0, Math.PI * 2);
-                        ctx.fill();
-                        break;
+            // Highlight active role card
+            rolesData.forEach(r => {
+                const card = document.getElementById(`role-card-${r.id}`);
+                if (card) {
+                    if (r.id === roleId) {
+                        card.classList.add('selected', 'bg-red-100', 'border-red-500');
+                    } else {
+                        card.classList.remove('selected', 'bg-red-100', 'border-red-500');
                     }
-                    accumulated += lengths[i];
                 }
             });
 
-            ctx.restore();
+            // Unlock and populate steps 2-6
+            const role = rolesData.find(r => r.id === roleId);
+            renderOptionSection('sec-goal', 'goal-options', role.goals, 'goalIndex', 'border-orange-300', 'bg-orange-50', 'text-orange-950', 'fa-bullseye');
+            renderOptionSection('sec-tone', 'tone-options', role.tones, 'toneIndex', 'border-yellow-300', 'bg-yellow-50', 'text-yellow-950', 'fa-face-smile');
+            renderOptionSection('sec-style', 'style-options', role.styles, 'styleIndex', 'border-green-300', 'bg-green-50', 'text-green-950', 'fa-wand-magic-sparkles');
+            renderOptionSection('sec-dos', 'dos-options', role.dos, 'dosIndex', 'border-blue-300', 'bg-blue-50', 'text-blue-950', 'fa-circle-check');
+            renderOptionSection('sec-donts', 'donts-options', role.donts, 'dontsIndex', 'border-purple-300', 'bg-purple-50', 'text-purple-950', 'fa-ban');
+
+            ['sec-goal', 'sec-tone', 'sec-style', 'sec-dos', 'sec-donts'].forEach(id => {
+                document.getElementById(id).classList.remove('opacity-60', 'pointer-events-none');
+            });
+
+            updateStateAndCheck();
         }
 
-        // 初始化
-        updateInfo();
-        draw();
+        // Render Option Cards for Steps 2 to 6
+        function renderOptionSection(secId, containerId, items, paramKey, borderColor, activeBg, activeTextColor, iconClass) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = `option-card bg-white p-3.5 rounded-2xl border-2 ${borderColor} hover:shadow-sm ${currentSelection[paramKey] === index ? `selected ${activeBg}` : ''}`;
+                card.onclick = () => selectParamOption(secId, paramKey, index, activeBg, borderColor);
+
+                card.innerHTML = `
+                    <div class="flex items-start gap-2.5">
+                        <i class="fa-solid ${iconClass} text-base mt-0.5 ${currentSelection[paramKey] === index ? activeTextColor : 'text-gray-400'}"></i>
+                        <div>
+                            <p class="font-bold text-xs sm:text-sm ${activeTextColor} leading-snug">${item.cn}</p>
+                            <p class="text-[11px] text-gray-500 font-mono mt-1 leading-tight">${item.en}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // If in Custom Mode, append a custom blank input field underneath the 3 templates
+            if (activeMode === 'custom') {
+                const customBox = document.createElement('div');
+                customBox.className = `col-span-full mt-2 bg-white/80 p-3 rounded-2xl border-2 ${borderColor}`;
+                
+                const currentCustomVal = currentSelection[`${paramKey}_custom_en`] || '';
+                
+                // Map paramKey to label title & step-specific placeholders
+                const fieldConfig = {
+                    'goalIndex': { label: 'Goal', placeholder: 'e.g. teach kids how to solve riddles' },
+                    'toneIndex': { label: 'Tone', placeholder: 'e.g. energetic, super cool and fun' },
+                    'styleIndex': { label: 'Style', placeholder: 'e.g. speak like a futuristic robot' },
+                    'dosIndex': { label: 'Do', placeholder: 'e.g. ask a riddle before each answer' },
+                    'dontsIndex': { label: "Don't", placeholder: 'e.g. never speak in a rude voice' }
+                };
+                const config = fieldConfig[paramKey] || { label: '', placeholder: 'e.g. type in English' };
+                
+                customBox.innerHTML = `
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <i class="fa-solid fa-pen text-xs ${activeTextColor}"></i>
+                        <span class="text-xs font-bold ${activeTextColor}">The ${config.label} of your own chatbot</span>
+                    </div>
+                    <input type="text" value="${currentCustomVal}" 
+                           oninput="onCustomParamInput('${secId}', '${paramKey}', this.value, '${activeBg}')"
+                           placeholder="${config.placeholder}" 
+                           class="w-full p-2.5 rounded-xl border border-gray-300 font-mono text-xs text-gray-800 font-bold focus:outline-none focus:border-indigo-500 bg-white">
+                `;
+                container.appendChild(customBox);
+            }
+        }
+
+        function onCustomParamInput(secId, paramKey, value, activeBg) {
+            const trimmed = value.trim();
+            if (trimmed) {
+                currentSelection[paramKey] = 'custom';
+                currentSelection[`${paramKey}_custom_en`] = trimmed;
+                currentSelection[`${paramKey}_custom_cn`] = trimmed;
+
+                // Deselect option cards in this section
+                const container = document.getElementById(secId);
+                const cards = container.querySelectorAll('.option-card');
+                cards.forEach(card => {
+                    card.classList.remove('selected', activeBg);
+                    const icon = card.querySelector('i');
+                    if (icon) icon.classList.add('text-gray-400');
+                });
+            } else {
+                currentSelection[paramKey] = null;
+                currentSelection[`${paramKey}_custom_en`] = '';
+                currentSelection[`${paramKey}_custom_cn`] = '';
+            }
+            updateStateAndCheck();
+        }
+
+        // Option Selection Handler
+        function selectParamOption(secId, paramKey, index, activeBg, borderColor) {
+            currentSelection[paramKey] = index;
+            // Clear custom input if card chosen
+            currentSelection[`${paramKey}_custom_en`] = '';
+            currentSelection[`${paramKey}_custom_cn`] = '';
+
+            const container = document.getElementById(secId);
+            const customInput = container.querySelector('input[type="text"]');
+            if (customInput) customInput.value = '';
+
+            const cards = container.querySelectorAll('.option-card');
+            cards.forEach((card, i) => {
+                const icon = card.querySelector('i');
+                if (i === index) {
+                    card.classList.add('selected', activeBg);
+                    if (icon) icon.classList.remove('text-gray-400');
+                } else {
+                    card.classList.remove('selected', activeBg);
+                    if (icon) icon.classList.add('text-gray-400');
+                }
+            });
+
+            updateStateAndCheck();
+        }
+
+        // Switch Mode (Preset vs Custom)
+        function switchRoleMode(mode) {
+            activeMode = mode;
+            const btnPreset = document.getElementById('tab-preset');
+            const btnCustom = document.getElementById('tab-custom');
+            const boxPreset = document.getElementById('container-preset-roles');
+            const boxCustom = document.getElementById('container-custom-role');
+
+            // Reset selection state
+            currentSelection = { roleId: null, goalIndex: null, toneIndex: null, styleIndex: null, dosIndex: null, dontsIndex: null };
+
+            if (mode === 'preset') {
+                btnPreset.className = 'px-3 py-1.5 rounded-lg bg-red-500 text-white shadow-sm transition';
+                btnCustom.className = 'px-3 py-1.5 rounded-lg text-red-700 hover:bg-red-200 transition';
+                boxPreset.classList.remove('hidden');
+                boxCustom.classList.add('hidden');
+                renderRoles();
+            } else {
+                btnCustom.className = 'px-3 py-1.5 rounded-lg bg-red-500 text-white shadow-sm transition';
+                btnPreset.className = 'px-3 py-1.5 rounded-lg text-red-700 hover:bg-red-200 transition';
+                boxCustom.classList.remove('hidden');
+                boxPreset.classList.add('hidden');
+
+                // Render Universal options for custom mode
+                renderUniversalOptions();
+            }
+
+            // Lock lower steps until custom role typed or preset picked
+            ['sec-goal', 'sec-tone', 'sec-style', 'sec-dos', 'sec-donts'].forEach(id => {
+                document.getElementById(id).classList.add('opacity-60', 'pointer-events-none');
+            });
+
+            updateStateAndCheck();
+        }
+
+        function onCustomRoleInput() {
+            const enRole = document.getElementById('custom-role-en').value.trim();
+
+            if (enRole) {
+                currentSelection.roleId = 'custom';
+                ['sec-goal', 'sec-tone', 'sec-style', 'sec-dos', 'sec-donts'].forEach(id => {
+                    document.getElementById(id).classList.remove('opacity-60', 'pointer-events-none');
+                });
+            } else {
+                currentSelection.roleId = null;
+                ['sec-goal', 'sec-tone', 'sec-style', 'sec-dos', 'sec-donts'].forEach(id => {
+                    document.getElementById(id).classList.add('opacity-60', 'pointer-events-none');
+                });
+            }
+            updateStateAndCheck();
+        }
+
+        function renderUniversalOptions() {
+            renderOptionSection('sec-goal', 'goal-options', universalOptions.goals, 'goalIndex', 'border-orange-300', 'bg-orange-50', 'text-orange-950', 'fa-bullseye');
+            renderOptionSection('sec-tone', 'tone-options', universalOptions.tones, 'toneIndex', 'border-yellow-300', 'bg-yellow-50', 'text-yellow-950', 'fa-face-smile');
+            renderOptionSection('sec-style', 'style-options', universalOptions.styles, 'styleIndex', 'border-green-300', 'bg-green-50', 'text-green-950', 'fa-wand-magic-sparkles');
+            renderOptionSection('sec-dos', 'dos-options', universalOptions.dos, 'dosIndex', 'border-blue-300', 'bg-blue-50', 'text-blue-950', 'fa-circle-check');
+            renderOptionSection('sec-donts', 'donts-options', universalOptions.donts, 'dontsIndex', 'border-purple-300', 'bg-purple-50', 'text-purple-950', 'fa-ban');
+        }
+
+        // Validate selection status & update UI progress
+        function updateStateAndCheck() {
+            let count = 0;
+            if (currentSelection.roleId !== null) count++;
+            if (currentSelection.goalIndex !== null) count++;
+            if (currentSelection.toneIndex !== null) count++;
+            if (currentSelection.styleIndex !== null) count++;
+            if (currentSelection.dosIndex !== null) count++;
+            if (currentSelection.dontsIndex !== null) count++;
+
+            // Update Progress Bar & Text
+            document.getElementById('progress-text').innerText = `${count} / 6`;
+            document.getElementById('progress-bar').style.width = `${(count / 6) * 100}%`;
+
+            const btnCopy = document.getElementById('btn-copy');
+            const completionStatus = document.getElementById('completion-status');
+
+            if (count === 6) {
+                // All 6 parts filled! Enable generation and copy button
+                completionStatus.className = 'bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1';
+                completionStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> 6 個部分已全部完成！';
+
+                btnCopy.disabled = false;
+                btnCopy.className = 'w-full sm:w-1/2 bg-amber-400 hover:bg-amber-300 text-gray-900 font-black py-3.5 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-base';
+
+                generatePromptOutput();
+            } else {
+                completionStatus.className = 'bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1';
+                completionStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 尚未選齊 6 個部分 (${count}/6)`;
+
+                btnCopy.disabled = true;
+                btnCopy.className = 'w-full sm:w-1/2 bg-gray-300 text-gray-500 font-black py-3.5 px-6 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed text-base';
+
+                document.getElementById('cn-prompt-text').innerText = '請選齊上面 6 個卡片，系統就會幫你組裝完整的提示詞！';
+                document.getElementById('en-prompt-text').value = '';
+            }
+        }
+
+        // Generate Prompt Output
+        function generatePromptOutput() {
+            let roleCn = '', roleEn = '';
+            let goal, tone, style, doItem, dontItem;
+
+            const getItem = (paramKey, optionsList) => {
+                if (currentSelection[paramKey] === 'custom') {
+                    return {
+                        cn: currentSelection[`${paramKey}_custom_cn`],
+                        en: currentSelection[`${paramKey}_custom_en`]
+                    };
+                }
+                return optionsList[currentSelection[paramKey]];
+            };
+
+            if (activeMode === 'preset') {
+                const role = rolesData.find(r => r.id === currentSelection.roleId);
+                roleCn = role.name;
+                roleEn = role.enRole;
+                goal = role.goals[currentSelection.goalIndex];
+                tone = role.tones[currentSelection.toneIndex];
+                style = role.styles[currentSelection.styleIndex];
+                doItem = role.dos[currentSelection.dosIndex];
+                dontItem = role.donts[currentSelection.dontsIndex];
+            } else {
+                roleEn = document.getElementById('custom-role-en').value.trim();
+                roleCn = roleEn; // Fallback to English name for display
+                goal = getItem('goalIndex', universalOptions.goals);
+                tone = getItem('toneIndex', universalOptions.tones);
+                style = getItem('styleIndex', universalOptions.styles);
+                doItem = getItem('dosIndex', universalOptions.dos);
+                dontItem = getItem('dontsIndex', universalOptions.donts);
+            }
+
+            // Chinese Prompt Preview
+            const cnPrompt = `你是【${roleCn}】。
+目標是：${goal.cn}
+請用【${tone.cn}】的語氣，和【${style.cn}】的風格說話。
+請遵守以下守則：
+– ${doItem.cn}
+– ${dontItem.cn}`;
+
+            document.getElementById('cn-prompt-text').innerText = cnPrompt;
+
+            // Standard English Prompt (Added hidden constraint: Keep response under 50 words)
+            const enPrompt = `You are ${roleEn}. Your goal is to ${goal.en}. Please speak in a ${tone.en} tone and ${style.en} style. Please follow these rules: - ${doItem.en}. - ${dontItem.en}. - Keep all your responses under 50 English words.`;
+
+            document.getElementById('en-prompt-text').value = enPrompt;
+        }
+
+        // Copy System Prompt Function (Optimized for iPad & iOS Safari Clipboard Access)
+        async function copySystemPrompt() {
+            const textarea = document.getElementById('en-prompt-text');
+            const textToCopy = textarea.value;
+
+            if (!textToCopy) return;
+
+            let isSuccess = false;
+
+            // Try Modern Navigator Clipboard API first (Preferred on modern iPadOS)
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    isSuccess = true;
+                } catch (err) {
+                    isSuccess = false;
+                }
+            }
+
+            // Fallback for older iOS Safari / iFrame environments
+            if (!isSuccess) {
+                try {
+                    textarea.removeAttribute('readonly'); // Briefly enable selection for iOS Safari
+                    textarea.focus();
+                    textarea.select();
+                    textarea.setSelectionRange(0, 99999); // Essential for Mobile Safari/iPad
+
+                    isSuccess = document.execCommand('copy');
+                    textarea.setAttribute('readonly', 'true');
+                    window.getSelection().removeAllRanges();
+                } catch (err) {
+                    isSuccess = false;
+                }
+            }
+
+            if (isSuccess) {
+                showToast('🎉 已成功複製英文 Prompt！去 Scratch 貼上吧！');
+            } else {
+                showToast('請長按文字框手動選取並複製。');
+            }
+        }
+
+        // Show Toast Notification
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = msg;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
